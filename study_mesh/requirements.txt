@@ -1,0 +1,18 @@
+# Core framework
+streamlit
+
+# Google AI and ADK
+google-genai
+google-adk
+
+# Utilities
+python-dotenv
+requests
+
+# Data science
+pandas
+plotly
+
+# External APIs
+arxiv
+PyGithub
