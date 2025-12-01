@@ -51,11 +51,20 @@ StudyMesh is built on a hierarchical, multi-agent architecture. A central **Orch
 ## 🗂️ File Tree & Explanation
 
 ```
+.
+├── myenv/
+├── screenshoots/
+├── study_mesh/
+├── error_log.txt
+├── read_log.py
+└── README.md
+```
+
+### study_mesh/
+```
 study_mesh/
 ├── .gitignore
 ├── app.py                  # Main Streamlit app entry point, user dashboard
-├── debug_imports.py
-├── debug_log.txt
 ├── requirements.txt        # Project dependencies
 ├── README.md               # This file
 ├── database/
@@ -71,15 +80,6 @@ study_mesh/
 │   ├── 4_📚_Papers.py       # UI for finding, summarizing, and managing research papers
 │   ├── 5_⚙️_Settings.py      # UI for profile management and API key configuration
 │   └── 6_📈_Observability.py # UI for viewing logs and metrics
-├── screenshoots/
-│   ├── Daily task.jpg
-│   ├── deadlines.jpg
-│   ├── observability.jpg
-│   ├── Onboarding.jpg
-│   ├── Onboarding2.jpg
-│   ├── papers.jpg
-│   ├── Progress.jpg
-│   └── setting.jpg
 └── src/
     ├── __init__.py
     ├── config.py               # App configuration, constants, and API key loading
