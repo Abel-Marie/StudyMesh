@@ -1,6 +1,6 @@
 import sqlite3
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "planner.db")
 
@@ -31,7 +31,8 @@ class DatabaseManager:
         """Get user profile."""
         with self.get_connection() as conn:
             cursor = conn.execute("SELECT * FROM user_profile ORDER BY id DESC LIMIT 1")
-            return dict(cursor.fetchone()) if cursor.fetchone() else None
+            row = cursor.fetchone()
+            return dict(row) if row else None
     
     def save_user_profile(self, name, study_goal, hours_per_day, days_per_week, topics):
         """Save or update user profile."""
@@ -73,7 +74,7 @@ class DatabaseManager:
     
     def update_task_status(self, task_id, status):
         """Update task status."""
-        completed_at = datetime.now() if status == 'completed' else None
+        completed_at = datetime.now().isoformat() if status == 'completed' else None
         with self.get_connection() as conn:
             conn.execute("""
                 UPDATE tasks SET status = ?, completed_at = ?
@@ -84,7 +85,7 @@ class DatabaseManager:
     def delete_task(self, task_id):
         """Delete a task."""
         with self.get_connection() as conn:
-            conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+            conn.execute("DELETE FROM tasks WHERE id = ?",(task_id,))
             conn.commit()
     
     # Deadlines
@@ -266,3 +267,100 @@ class DatabaseManager:
         with self.get_connection() as conn:
             conn.execute("UPDATE reminders SET is_dismissed = 1 WHERE id = ?", (reminder_id,))
             conn.commit()
+    
+    # User Streaks (NEW)
+    def update_streak(self, date=None, activity_type='general'):
+        """Update daily streak tracking."""
+        if date is None:
+            date = datetime.now().date().isoformat()
+        
+        with self.get_connection() as conn:
+            try:
+                conn.execute("""
+                    INSERT INTO user_streaks (date, activity_type)
+                    VALUES (?, ?)
+                """, (date, activity_type))
+                conn.commit()
+            except sqlite3.IntegrityError:
+                # Date already exists, update activity type if different
+                conn.execute("""
+                    UPDATE user_streaks SET activity_type = ?
+                    WHERE date = ?
+                """, (activity_type, date))
+                conn.commit()
+    
+    def get_streak_count(self, activity_type=None):
+        """Calculate current consecutive streak."""
+        with self.get_connection() as conn:
+            query = "SELECT date FROM user_streaks"
+            params = []
+            
+            if activity_type:
+                query += " WHERE activity_type = ?"
+                params.append(activity_type)
+            
+            query += " ORDER BY date DESC"
+            
+            cursor = conn.execute(query, params)
+            dates = [row['date'] for row in cursor.fetchall()]
+            
+            if not dates:
+                return 0
+            
+            # Calculate streak
+            streak = 1
+            current_date = datetime.fromisoformat(dates[0]).date()
+            
+            for date_str in dates[1:]:
+                date = datetime.fromisoformat(date_str).date()
+                if (current_date - date).days == 1:
+                    streak += 1
+                    current_date = date
+                else:
+                    break
+            
+            return streak
+    
+    def get_streaks_history(self, days=30):
+        """Get streak history for the last N days."""
+        with self.get_connection() as conn:
+            start_date = (datetime.now().date() - timedelta(days=days)).isoformat()
+            cursor = conn.execute("""
+                SELECT * FROM user_streaks
+                WHERE date >= ?
+                ORDER BY date DESC
+            """, (start_date,))
+            return [dict(row) for row in cursor.fetchall()]
+    
+    # Praise Messages (NEW)
+    def save_praise_message(self, message, task_id=None, context=None):
+        """Store AI-generated praise."""
+        with self.get_connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO praise_messages (message, task_id, context)
+                VALUES (?, ?, ?)
+            """, (message, task_id, context))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def get_latest_praise(self, limit=1):
+        """Get most recent praise message(s)."""
+        with self.get_connection() as conn:
+            cursor = conn.execute("""
+                SELECT * FROM praise_messages
+                ORDER BY created_at DESC
+                LIMIT ?
+            """, (limit,))
+            results = [dict(row) for row in cursor.fetchall()]
+            return results[0] if limit == 1 and results else results
+    
+    def get_praise_history(self, days=7):
+        """Get recent praise messages."""
+        with self.get_connection() as conn:
+            start_date = (datetime.now() - timedelta(days=days)).isoformat()
+            cursor = conn.execute("""
+                SELECT * FROM praise_messages
+                WHERE created_at >= ?
+                ORDER BY created_at DESC
+            """, (start_date,))
+            return [dict(row) for row in cursor.fetchall()]

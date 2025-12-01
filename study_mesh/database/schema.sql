@@ -93,3 +93,21 @@ CREATE TABLE IF NOT EXISTS reminders (
     is_dismissed BOOLEAN DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- User Streaks (for tracking daily activity)
+CREATE TABLE IF NOT EXISTS user_streaks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT UNIQUE NOT NULL,
+    activity_type TEXT CHECK(activity_type IN ('general', 'github', 'study', 'task')) DEFAULT 'general',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Praise Messages (AI-generated encouragement)
+CREATE TABLE IF NOT EXISTS praise_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    message TEXT NOT NULL,
+    task_id INTEGER,
+    context TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_id) REFERENCES tasks(id)
+);

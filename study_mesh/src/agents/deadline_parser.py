@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from google.adk.agents import LlmAgent
 from google.adk.models.google_llm import Gemini
 from src.config import get_retry_config
@@ -5,6 +7,8 @@ import json
 
 from google.adk.tools import FunctionTool
 from src.mcp.web_scraper_mcp import WebScraperMCP
+
+load_dotenv()
 
 def create_deadline_parser_agent():
     """Agent specialized in parsing URLs and text to extract deadline information."""
@@ -14,7 +18,11 @@ def create_deadline_parser_agent():
     scrape_tool = FunctionTool(func=scraper.scrape_url)
     
     return LlmAgent(
-        model=Gemini(model="gemini-2.5-flash-lite", retry_options=get_retry_config()),
+        model=Gemini(
+            model="gemini-2.5-flash-lite", 
+            api_key=os.environ.get("GOOGLE_API_KEY"), 
+            retry_options=get_retry_config()
+        ),
         name="deadline_parser",
         description="Extracts deadline information from URLs and text descriptions",
         instruction="""You are a deadline extraction specialist.

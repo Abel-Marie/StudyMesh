@@ -1,18 +1,10 @@
-# Core framework
 streamlit
-
-# Google AI and ADK
 google-genai
-google-adk
-
-# Utilities
+nest-asyncio
 python-dotenv
 requests
-
-# Data science
-pandas
-plotly
-
-# External APIs
 arxiv
-PyGithub
+plotly
+pandas
+google-adk
+beautifulsoup4
